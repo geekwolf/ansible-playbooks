@@ -8,7 +8,7 @@
     - name: set memcached size
       set_fact: memcached_size={{ ansible_memtotal_mb/2 }}
     - name: copy configureations ansible_memtotal_mb/2
-      template: src=templates/memcached.j2 dest=/etc/memcached.conf
+      template: src=templates/memcached.j2 dest=/etc/sysconfig/memcached
       notify:
       - restart memcached
     - name: ensure memcached is running
