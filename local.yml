@@ -4,7 +4,7 @@
 
    tasks:
     - name: install memcached
-      apt: name=memcached state=installed
+      yum: name=memcached state=installed
     - name: set memcached size
       set_fact: memcached_size={{ ansible_memtotal_mb/2 }}
     - name: copy configureations ansible_memtotal_mb/2
