@@ -1,0 +1,46 @@
+---
+
+- hosts: 192.168.0.2
+  user: root
+
+  vars:
+
+    # schedule is fed directly to cron
+    schedule: '*/15 * * * *'
+
+    # User to run ansible-pull as from cron
+    cron_user: root
+
+    # File that ansible will use for logs
+    logfile: /var/log/ansible-pull.log
+
+    # Directory to where repository will be cloned
+    workdir: /var/lib/ansible/local
+
+    # Repository to check out -- YOU MUST CHANGE THIS
+    # repo must contain a local.yml file at top level
+    repo_url: https://github.com/geekwolf/ansible-playbooks.git
+
+  tasks:
+    - name: Setup EPEL 
+      action: command rpm -ivh http://mirrors.hustunique.com/epel/6/x86_64/epel-release-6-8.noarch.rpm
+                      creates=/etc/yum.repos.d/epel.repo
+    - name: Install ansible and git
+      action: yum name={{ item }} state=latest enablerepo=epel
+      with_items:
+      - ansible
+      - git
+    - name: Create local directory to work from
+      action: file path={{workdir}} state=directory owner=root group=root mode=0751
+
+    - name: Copy ansible inventory file to client
+      action: copy src=hosts dest=/etc/ansible/hosts
+              owner=root group=root mode=0644
+
+    - name: Create crontab entry to clone/pull git repository
+      action: template src=templates/etc_cron.d_ansible-pull.j2 dest=/etc/cron.d/ansible-pull owner=root group=root mode=0644
+
+    - name: Create logrotate entry for ansible-pull.log
+      action: template src=templates/etc_logrotate.d_ansible-pull.j2 dest=/etc/logrotate.d/ansible-pull owner=root group=root mode=0644
+    - name: ssh keys
+      action: shell /usr/bin/ssh-keygen -t rsa -P '' -f /root/.ssh/id_rsa  && cat ~/.ssh/id_rsa.pub >>~/.ssh/authorized_keys && /usr/bin/ssh-keyscan  127.0.0.1 github.com   >> ~/.ssh/known_hosts
