@@ -1,0 +1,19 @@
+---
+ - hosts: 127.0.0.1
+   remote_user: root
+
+   tasks:
+    - name: install memcached
+      apt: name=memcached state=installed
+    - name: set memcached size
+      set_fact: memcached_size={{ ansible_memtotal_mb/2 }}
+    - name: copy configureations ansible_memtotal_mb/2
+      template: src=templates/memcached.j2 dest=/etc/memcached.conf
+      notify:
+      - restart memcached
+    - name: ensure memcached is running
+      service: name=memcached state=started
+   handlers:
+    - name: restart memcached
+      service: name=memcached state=restarted
+
